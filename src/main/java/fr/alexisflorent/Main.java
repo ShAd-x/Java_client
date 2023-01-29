@@ -1,4 +1,4 @@
-package org.example;
+package fr.alexisflorent;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
