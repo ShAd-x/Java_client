@@ -3,59 +3,61 @@ package fr.alexisflorent;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        // Connexion au serveur
-        String serverAddress = "localhost";
-        int port = 5555;
         Socket socket = null;
-        try {
-            socket = new Socket(serverAddress, port);
-            System.out.println("Connecté au serveur " + serverAddress + " sur le port " + port);
-        } catch (IOException e) {
-            System.out.println("Connexion au serveur échouée");
-            e.printStackTrace();
-            return;
-        }
         // Boucle de saisie des données
         Scanner scanner = new Scanner(System.in);
-        HashMap<String, String> books = new HashMap<>();
-        HashMap<String, String> readers = new HashMap<>();
+        ArrayList<String[]> livres = new ArrayList<>();
+        ArrayList<String[]> lecteurs = new ArrayList<>();
         while (true) {
-            System.out.println("1. Saisir un livre");
-            System.out.println("2. Saisir un lecteur");
-            System.out.println("3. Envoyer les données au serveur");
-            System.out.println("4. Se déconnecter");
+            // On affiche le menu
+            afficherMenu();
+
+            // Vérification de la saisie
+            while (!scanner.hasNextInt()) {
+                System.out.print("Veuillez saisir un nombre : ");
+                scanner.nextLine();
+            }
             int option = scanner.nextInt();
             scanner.nextLine();
 
+            // Traitement de l'option
             if (option == 1) {
+                // Saisie des données
                 System.out.print("Titre : ");
-                String title = scanner.nextLine();
+                String titre = scanner.nextLine();
                 System.out.print("Auteur : ");
-                String author = scanner.nextLine();
-                books.put(title, author);
+                String auteur = scanner.nextLine();
+                System.out.print("Nombre de pages : ");
+                String nbPages = scanner.nextLine();
+                livres.add(new String[]{titre, auteur, nbPages});
             } else if (option == 2) {
+                // Saisie des données
                 System.out.print("Nom : ");
-                String name = scanner.nextLine();
+                String nom = scanner.nextLine();
+                System.out.print("Prénom : ");
+                String prenom = scanner.nextLine();
                 System.out.print("Email : ");
                 String email = scanner.nextLine();
-                readers.put(name, email);
+                lecteurs.add(new String[]{nom, prenom, email});
             } else if (option == 3) {
                 try {
+                    // Connexion et envoie au serveur
+                    socket = createSocket();
                     ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-                    oos.writeObject(books);
-                    oos.writeObject(readers);
+                    oos.writeObject(livres);
+                    oos.writeObject(lecteurs);
                     oos.flush();
+                    System.out.println("Données envoyées au serveur");
+                    livres.clear();
+                    lecteurs.clear();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                System.out.println("Données envoyées au serveur");
-                books.clear();
-                readers.clear();
             } else if (option == 4) {
                 break;
             } else {
@@ -65,11 +67,46 @@ public class Main {
 
         // Déconnexion propre
         try {
-            socket.close();
+            if (socket != null) {
+                socket.close();
+            }
             System.out.println("Déconnecté proprement du serveur");
         } catch (IOException e) {
             System.out.println("Erreur lors de la déconnexion");
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Affichage du menu
+     * @return void
+     */
+    private static void afficherMenu() {
+        System.out.println(" ");
+        System.out.println("--[ Menu ]--");
+        System.out.println("Que voulez-vous faire ?");
+        System.out.println("1. Saisir un livre");
+        System.out.println("2. Saisir un lecteur");
+        System.out.println("3. Envoyer les données au serveur");
+        System.out.println("4. Se déconnecter");
+        System.out.print("Votre choix : ");
+    }
+
+    /**
+     * Création d'un socket client
+     * @return Socket
+     */
+    private static Socket createSocket() {
+        String serverAddress = "localhost";
+        int port = 5555;
+        Socket socket = null;
+        try {
+            socket = new Socket(serverAddress, port);
+            System.out.println("Connecté au serveur " + serverAddress + " sur le port " + port);
+        } catch (IOException e) {
+            System.out.println("Connexion au serveur échouée");
+            e.printStackTrace();
+        }
+        return socket;
     }
 }
